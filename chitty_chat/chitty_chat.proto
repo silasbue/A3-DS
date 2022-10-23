@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "github.com/silasbue/A3-DS/chitty_chat";
+
+package chitty_chat;
+
+
+service ChittyChat
+{
+  rpc getMessage(MessageRequest) returns (MessageReply);
+}
+
+message MessageRequest {
+  string msg = 1;
+}
+
+message MessageReply {
+  string msg = 1;
+}
