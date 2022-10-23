@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"time"
 
 	"github.com/silasbue/A3-DS.git/chitty_chat"
 	"google.golang.org/grpc"
@@ -16,11 +16,19 @@ func main() {
 
 	client := chitty_chat.NewChittyChatClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	r, _ := client.GetMessage(ctx, &chitty_chat.MessageRequest{Msg: "hi"})
+	for i := 0; i < 2; i++ {
+		var input string
 
-	log.Printf("Reply from server: %s", r.GetMsg())
+		fmt.Scanln(&input)
+
+		r, _ := client.GetMessage(ctx, &chitty_chat.MessageRequest{Msg: input})
+
+		log.Printf("Reply from server: %s", r.GetMsg())
+	}
+
+	conn.Close()
 
 }
