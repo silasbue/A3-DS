@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"io"
 	"log"
+	"os"
 
 	"github.com/silasbue/A3-DS.git/chitty_chat"
 	"google.golang.org/grpc"
@@ -24,20 +27,26 @@ func main() {
 	go func() {
 		for {
 			in, err := stream.Recv()
-			/*if err == io.EOF {
-				// read done.
+			if err == io.EOF {
 				close(waitc)
 				return
-			}*/
-			// if err != nil {
-			// 	log.Fatalf("Failed to receive a note : %v", err)
-			// }
+			}
 			if err != nil {
 				log.Fatalf("Failed to receive a note : %v", err)
-				break
 			}
 			log.Println("Got message: ", in.Msg)
 		}
 	}()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		msg := scanner.Text()
+		err := stream.Send(&chitty_chat.Message{Msg: msg})
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	<-waitc
 }
