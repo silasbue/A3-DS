@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net"
 
@@ -11,11 +10,16 @@ import (
 
 type Server struct {
 	chitty_chat.UnimplementedChittyChatServer
+	streams []chitty_chat.ChittyChat_ChatServer
 }
 
-func (s *Server) GetMessage(ctx context.Context, in *chitty_chat.MessageRequest) (*chitty_chat.MessageReply, error) {
-	log.Printf("Received message: %v", in.GetMsg())
-	return &chitty_chat.MessageReply{Msg: "recieved: " + in.GetMsg()}, nil
+func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
+	s.streams = append(s.streams, stream)
+	for _, client := range s.streams {
+		client.Send(&chitty_chat.Message{Id: 1, Msg: "A new client has joined", T: 1})
+	}
+
+	return nil
 }
 
 func main() {

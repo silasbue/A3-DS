@@ -7,13 +7,12 @@ package chitty_chat;
 
 service ChittyChat
 {
-  rpc getMessage(MessageRequest) returns (MessageReply);
+  rpc Chat(stream Message) returns (stream Message);
 }
 
-message MessageRequest {
-  string msg = 1;
+message Message {
+  int32 id = 1;
+  string msg = 2;
+  int32 T = 3;
 }
 
-message MessageReply {
-  string msg = 1;
-}

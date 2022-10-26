@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/silasbue/A3-DS.git/chitty_chat"
@@ -11,6 +10,7 @@ import (
 )
 
 func main() {
+	waitc := make(chan struct{})
 	conn, _ := grpc.Dial("localhost:5400", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	defer conn.Close()
 
@@ -19,16 +19,25 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	for i := 0; i < 2; i++ {
-		var input string
+	stream, _ := client.Chat(ctx)
 
-		fmt.Scanln(&input)
-
-		r, _ := client.GetMessage(ctx, &chitty_chat.MessageRequest{Msg: input})
-
-		log.Printf("Reply from server: %s", r.GetMsg())
-	}
-
-	conn.Close()
-
+	go func() {
+		for {
+			in, err := stream.Recv()
+			/*if err == io.EOF {
+				// read done.
+				close(waitc)
+				return
+			}*/
+			// if err != nil {
+			// 	log.Fatalf("Failed to receive a note : %v", err)
+			// }
+			if err != nil {
+				log.Fatalf("Failed to receive a note : %v", err)
+				break
+			}
+			log.Println("Got message: ", in.Msg)
+		}
+	}()
+	<-waitc
 }
