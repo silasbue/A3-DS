@@ -15,12 +15,15 @@ type Server struct {
 	streams []chitty_chat.ChittyChat_ChatServer
 }
 
+var T int32
+
 func (s *Server) connect(newStream chitty_chat.ChittyChat_ChatServer) string {
 	s.streams = append(s.streams, newStream)
 	// Notify all clients that a new client has joined
 	nameMsg, _ := newStream.Recv()
+	// T = Max(T, nameMsg.GetT())
 	for _, client := range s.streams {
-		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.Username + " has joined the chat"})
+		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.GetUsername() + " has joined the chat", T: T})
 	}
 	return nameMsg.Username
 }
@@ -32,6 +35,8 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 		for {
 			msg, err := stream.Recv()
 
+			T = Max(T, msg.GetT())
+
 			if err == io.EOF {
 				return
 			} else if err != nil {
@@ -41,19 +46,19 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 				remove(s.streams, stream)
 				// Notify clients
 				for _, client := range s.streams {
-					client.SendMsg(&chitty_chat.Message{Msg: user + " left the chat"})
+					client.SendMsg(&chitty_chat.Message{Msg: user + " left the chat", T: T})
 				}
 				return
 			}
 			for _, client := range s.streams {
-				client.SendMsg(&chitty_chat.Message{Username: msg.Username, Msg: msg.GetMsg()})
+				client.SendMsg(&chitty_chat.Message{Username: msg.GetUsername(), Msg: msg.GetMsg(), T: T})
 			}
 		}
 	}()
 
 	waitc := make(chan struct{})
 	user = s.connect(stream)
-	log.Println(user, "has joined the chat")
+	log.Println(user, "has joined the chat", "Lamport:", T)
 
 	<-waitc
 	return nil
@@ -63,6 +68,8 @@ func main() {
 	if len(os.Args) != 2 {
 		log.Printf("Please input the port to run the server on")
 	}
+
+	T = 0
 
 	lis, _ := net.Listen("tcp", "localhost:"+os.Args[1])
 
@@ -84,4 +91,12 @@ func remove(s []chitty_chat.ChittyChat_ChatServer, client chitty_chat.ChittyChat
 	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func Max(i int32, j int32) int32 {
+	if i > j {
+		return i
+	}
+
+	return j
 }
