@@ -33,8 +33,8 @@ func main() {
 
 	//Joining the chat
 	stream, _ := client.Chat(ctx)
-	stream.Send(&chitty_chat.Message{Username: os.Args[2], T: T})
 	T++
+	stream.Send(&chitty_chat.Message{Username: os.Args[2], T: T})
 
 	//Recieve messages
 	go func() {
@@ -58,8 +58,8 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := scanner.Text()
-		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg, T: T})
 		T++
+		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg, T: T})
 
 		if err != nil {
 			panic(err)
