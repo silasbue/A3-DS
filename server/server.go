@@ -15,17 +15,15 @@ type Server struct {
 	streams []chitty_chat.ChittyChat_ChatServer
 }
 
-var T int32
-
 func (s *Server) connect(newStream chitty_chat.ChittyChat_ChatServer) string {
 	s.streams = append(s.streams, newStream)
 	// Notify all clients that a new client has joined
 	nameMsg, _ := newStream.Recv()
-	// T = Max(T, nameMsg.GetT())
 	for _, client := range s.streams {
-		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.GetUsername() + " has joined the chat", T: T})
+		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.GetUsername() + " has joined the chat", T: nameMsg.GetT()})
 	}
-	return nameMsg.Username
+	log.Println(nameMsg.GetUsername(), "has joined the chat", "Lamport:", nameMsg.GetT())
+	return nameMsg.GetUsername()
 }
 
 func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
@@ -34,8 +32,6 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 	go func() {
 		for {
 			msg, err := stream.Recv()
-
-			T = Max(T, msg.GetT())
 
 			if err == io.EOF {
 				return
@@ -46,19 +42,18 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 				remove(s.streams, stream)
 				// Notify clients
 				for _, client := range s.streams {
-					client.SendMsg(&chitty_chat.Message{Msg: user + " left the chat", T: T})
+					client.SendMsg(&chitty_chat.Message{Msg: user + " left the chat", T: msg.GetT()})
 				}
 				return
 			}
 			for _, client := range s.streams {
-				client.SendMsg(&chitty_chat.Message{Username: msg.GetUsername(), Msg: msg.GetMsg(), T: T})
+				client.SendMsg(&chitty_chat.Message{Username: msg.GetUsername(), Msg: msg.GetMsg(), T: msg.GetT()})
 			}
 		}
 	}()
 
 	waitc := make(chan struct{})
 	user = s.connect(stream)
-	log.Println(user, "has joined the chat", "Lamport:", T)
 
 	<-waitc
 	return nil
@@ -68,8 +63,6 @@ func main() {
 	if len(os.Args) != 2 {
 		log.Printf("Please input the port to run the server on")
 	}
-
-	T = 0
 
 	lis, _ := net.Listen("tcp", "localhost:"+os.Args[1])
 

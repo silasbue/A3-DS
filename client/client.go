@@ -50,7 +50,7 @@ func main() {
 			// Update timestamp
 			T = Max(T, in.GetT()) + 1
 			// Log message
-			log.Println(in.Username+": "+in.Msg, "Lamport:", in.GetT())
+			log.Println(in.Username+": "+in.Msg, "Lamport:", T)
 		}
 	}()
 
