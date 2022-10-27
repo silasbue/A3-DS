@@ -11,7 +11,7 @@ service ChittyChat
 }
 
 message Message {
-  int32 id = 1;
+  string username = 1;
   string msg = 2;
   int32 T = 3;
 }

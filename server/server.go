@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 
 	"github.com/silasbue/A3-DS.git/chitty_chat"
 	"google.golang.org/grpc"
@@ -16,8 +17,10 @@ type Server struct {
 
 func (s *Server) connect(newStream chitty_chat.ChittyChat_ChatServer) {
 	s.streams = append(s.streams, newStream)
+	// Notify all clients that a new client has joined
+	nameMsg, _ := newStream.Recv()
 	for _, client := range s.streams {
-		client.SendMsg(&chitty_chat.Message{Id: 1, Msg: "A new client has joined", T: 1})
+		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.Username + " has joined the chat"})
 	}
 }
 
@@ -32,7 +35,7 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 				return
 			}
 			for _, client := range s.streams {
-				client.SendMsg(&chitty_chat.Message{Msg: msg.GetMsg()})
+				client.SendMsg(&chitty_chat.Message{Username: msg.Username, Msg: msg.GetMsg()})
 			}
 		}
 	}()
@@ -45,7 +48,11 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 }
 
 func main() {
-	lis, _ := net.Listen("tcp", "localhost:5400")
+	if len(os.Args) != 2 {
+		log.Printf("Please input the port to run the server on")
+	}
+
+	lis, _ := net.Listen("tcp", "localhost:"+os.Args[1])
 
 	grpcServer := grpc.NewServer()
 	chitty_chat.RegisterChittyChatServer(grpcServer, &Server{})

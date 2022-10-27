@@ -13,8 +13,13 @@ import (
 )
 
 func main() {
+	if len(os.Args) != 3 {
+		log.Printf("Please run the client with an URL and a username")
+		return
+	}
+
 	waitc := make(chan struct{})
-	conn, _ := grpc.Dial("localhost:5400", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, _ := grpc.Dial(os.Args[1], grpc.WithTransportCredentials(insecure.NewCredentials()))
 	defer conn.Close()
 
 	client := chitty_chat.NewChittyChatClient(conn)
@@ -23,6 +28,7 @@ func main() {
 	defer cancel()
 
 	stream, _ := client.Chat(ctx)
+	stream.Send(&chitty_chat.Message{Username: os.Args[2]})
 
 	go func() {
 		for {
@@ -34,18 +40,19 @@ func main() {
 			if err != nil {
 				log.Fatalf("Failed to receive a note : %v", err)
 			}
-			log.Println("Got message: ", in.Msg)
+			log.Println(in.Username + ": " + in.Msg)
 		}
 	}()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := scanner.Text()
-		err := stream.Send(&chitty_chat.Message{Msg: msg})
+		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg})
 
 		if err != nil {
 			panic(err)
 		}
+
 	}
 
 	<-waitc
