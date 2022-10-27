@@ -1,0 +1,27 @@
+\documentclass{article}
+\input{preamble.tex}
+
+\title{Assignment 3 DISYS}
+\author{frgm, mhsi & sibh}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+
+\section*{System architecture}
+Our system uses a server-client architecture.
+This means that each client only talks to the server,
+and the server is therefore responsible for handling joining and leaving clients.
+The clients therefore also don't need to know anything about the other client.
+When a client sends a message, it is sent to the server which then distributes the message to all clients.
+
+\section*{RPC Methods}
+We have one method in the .proto 
+
+\section*{Lamport timestamps}
+We have implemented Lamport timestamps 
+
+\section*{Traces of RPC calls}
+
+\end{document}
