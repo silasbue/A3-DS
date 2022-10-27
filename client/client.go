@@ -12,11 +12,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+var T int32
+
 func main() {
 	if len(os.Args) != 3 {
 		log.Printf("Please run the client with an URL and a username")
 		return
 	}
+
+	T = 0
 
 	waitc := make(chan struct{})
 	conn, _ := grpc.Dial(os.Args[1], grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -27,9 +31,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	//Joining the chat
 	stream, _ := client.Chat(ctx)
-	stream.Send(&chitty_chat.Message{Username: os.Args[2]})
+	T++
+	stream.Send(&chitty_chat.Message{Username: os.Args[2], T: T})
 
+	//Recieve messages
 	go func() {
 		for {
 			in, err := stream.Recv()
@@ -40,14 +47,19 @@ func main() {
 			if err != nil {
 				log.Fatalf("Failed to receive a note : %v", err)
 			}
-			log.Println(in.Username + ": " + in.Msg)
+			// Update timestamp
+			T = Max(T, in.GetT()) + 1
+			// Log message
+			log.Println(in.Username+": "+in.Msg, "Lamport:", T)
 		}
 	}()
 
+	// Send messages
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := scanner.Text()
-		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg})
+		T++
+		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg, T: T})
 
 		if err != nil {
 			panic(err)
@@ -56,4 +68,12 @@ func main() {
 	}
 
 	<-waitc
+}
+
+func Max(i int32, j int32) int32 {
+	if i > j {
+		return i
+	}
+
+	return j
 }
