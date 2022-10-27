@@ -20,7 +20,10 @@ When a client sends a message, it is sent to the server which then distributes t
 We have one method in the .proto 
 
 \section*{Lamport timestamps}
-We have implemented Lamport timestamps 
+We have implemented Lamport timestamps by storing a counter at each client, which the increases by one before sending a message, and after recieving a message. This is explains why the timestamp increases by two each time a message is sent.
+\\
+\\ 
+When recieving a message, we take the maximum value of the local timestamp and the timestamp of the incoming message, increases it by one, and keeps it as new the local timestamp.
 
 \section*{Traces of RPC calls}
 
