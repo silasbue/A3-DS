@@ -19,6 +19,7 @@ func (s *Server) connect(newStream chitty_chat.ChittyChat_ChatServer) string {
 	s.streams = append(s.streams, newStream)
 	// Notify all clients that a new client has joined
 	nameMsg, _ := newStream.Recv()
+
 	for _, client := range s.streams {
 		client.SendMsg(&chitty_chat.Message{Username: "Server", Msg: nameMsg.GetUsername() + " has joined the chat", T: nameMsg.GetT()})
 	}
@@ -28,6 +29,7 @@ func (s *Server) connect(newStream chitty_chat.ChittyChat_ChatServer) string {
 
 func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 	var user string
+	user = s.connect(stream)
 
 	go func() {
 		for {
@@ -53,7 +55,6 @@ func (s *Server) Chat(stream chitty_chat.ChittyChat_ChatServer) error {
 	}()
 
 	waitc := make(chan struct{})
-	user = s.connect(stream)
 
 	<-waitc
 	return nil
