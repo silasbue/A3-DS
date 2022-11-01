@@ -58,6 +58,10 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := scanner.Text()
+		if len(msg) > 128 {
+			log.Println("Messages can be at most 128 characters long")
+			continue
+		}
 		T++
 		err := stream.Send(&chitty_chat.Message{Username: os.Args[2], Msg: msg, T: T})
 
