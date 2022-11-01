@@ -1,0 +1,34 @@
+@startuml
+note over Alice : Lamport 1
+Alice -> Server: Client Join (Lamport: 1)
+Server -> Alice: "Alice has joined the chat" (Lamport: 2)
+note over Alice : Lamport 3
+
+note over Bob : Lamport 1
+Bob -> Server: Client Join (Lamport: 1)
+Server -> Bob: "Bob has joined the chat" (Lamport: 2)
+note over Bob : Lamport 3
+
+Server -> Alice: "Bob has joined the chat" (Lamport: 2)
+note over Alice : Lamport 4
+
+Bob -> Server: "Bob: Hello Alice" (Lamport: 3)
+
+Server -> Alice: "Bob: Hello Alice" (Lamport: 4)
+note over Alice : Lamport 5
+
+Server -> Bob: "Bob: Hello Alice" (Lamport: 4)
+note over Bob : Lamport 5
+
+Alice -> Server: "Alice: Hello Bob" (Lamport: 5)
+Server -> Bob: "Alice: Hello Bob" (Lamport: 6)
+note over Bob : Lamport 7
+
+Server -> Alice: "Alice: Hello Bob" (Lamport: 6)
+note over Alice : Lamport 7
+
+Bob -> Server: Client Exit (Lamport: 7)
+Server -> Alice: "Bob has left the chat" (Lamport: 8)
+note over Alice : Lamport 9
+
+@enduml
